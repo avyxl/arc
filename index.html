@@ -629,16 +629,16 @@
 
     <!-- MINI MUSIC PLAYER WIDGET -->
     <div id="mini-player" style="position: fixed; bottom: 20px; right: 20px; background: rgba(15, 15, 15, 0.9); color: #ffffff; padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); font-family: var(--font-code); z-index: 9999; border: 1px solid var(--card-border); backdrop-filter: blur(12px);">
-        <button id="play-btn" onclick="togglePlay()" style="background: #ffffff; border: none; color: #000000; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px;">❚❚</button>
+        <button id="play-btn" onclick="togglePlay()" style="background: #ffffff; border: none; color: #000000; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px;">▶</button>
         
         <div style="display: flex; flex-direction: column;">
-            <span style="font-size: 12px; font-weight: 600; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">lov me stupid</span>
-            <span id="player-status" style="font-size: 10px; color: var(--text-dim);">playing (muted)</span>
+            <span style="font-size: 12px; font-weight: 600; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">song.mp3</span>
+            <span id="player-status" style="font-size: 10px; color: var(--text-dim);">click to play</span>
         </div>
 
-        <button id="mute-btn" onclick="toggleMute()" style="background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 15px; padding: 4px;">🔇</button>
+        <button id="mute-btn" onclick="toggleMute()" style="background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 15px; padding: 4px;">🔊</button>
 
-        <audio id="audio-element" autoplay muted loop src="lov%20me%20stupid%20(mp3cut.net).mp3"></audio>
+        <audio id="audio-element" loop preload="auto" src="song.mp3"></audio>
     </div>
 
     <script>
@@ -914,29 +914,37 @@
         const muteBtn = document.getElementById('mute-btn');
         const statusText = document.getElementById('player-status');
 
-        window.addEventListener('DOMContentLoaded', () => {
+        function startPlayback() {
             audio.play().then(() => {
+                playBtn.innerText = '❚❚';
                 statusText.innerText = audio.muted ? 'playing (muted)' : 'playing';
-            }).catch(() => {
+            }).catch(e => {
                 playBtn.innerText = '▶';
-                statusText.innerText = 'click to play';
+                statusText.innerText = 'click play button';
             });
+        }
+
+        // Error detection if the audio file fails to load
+        audio.addEventListener('error', () => {
+            statusText.innerText = "file 'song.mp3' not found";
+            statusText.style.color = '#ff6b6b';
         });
 
-        // Unmute automatically on first click anywhere on page
-        document.addEventListener('click', function startAudioOnInteraction() {
-            if (audio.muted) {
-                audio.muted = false;
-                muteBtn.innerText = '🔊';
-                statusText.innerText = 'playing';
+        // Trigger autoplay after first interaction anywhere on page if paused
+        const autoPlayHandler = () => {
+            if (audio.paused) {
+                startPlayback();
             }
-        }, { once: true });
+            document.removeEventListener('click', autoPlayHandler);
+            document.removeEventListener('keydown', autoPlayHandler);
+        };
+
+        document.addEventListener('click', autoPlayHandler);
+        document.addEventListener('keydown', autoPlayHandler);
 
         function togglePlay() {
             if (audio.paused) {
-                audio.play();
-                playBtn.innerText = '❚❚';
-                statusText.innerText = audio.muted ? 'playing (muted)' : 'playing';
+                startPlayback();
             } else {
                 audio.pause();
                 playBtn.innerText = '▶';
