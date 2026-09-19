@@ -627,6 +627,20 @@
 
     <div class="toast" id="toast">copied code to clipboard</div>
 
+    <!-- MINI MUSIC PLAYER WIDGET -->
+    <div id="mini-player" style="position: fixed; bottom: 20px; right: 20px; background: rgba(15, 15, 15, 0.9); color: #ffffff; padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); font-family: var(--font-code); z-index: 9999; border: 1px solid var(--card-border); backdrop-filter: blur(12px);">
+        <button id="play-btn" onclick="togglePlay()" style="background: #ffffff; border: none; color: #000000; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px;">❚❚</button>
+        
+        <div style="display: flex; flex-direction: column;">
+            <span style="font-size: 12px; font-weight: 600; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">lov me stupid</span>
+            <span id="player-status" style="font-size: 10px; color: var(--text-dim);">playing (muted)</span>
+        </div>
+
+        <button id="mute-btn" onclick="toggleMute()" style="background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 15px; padding: 4px;">🔇</button>
+
+        <audio id="audio-element" autoplay muted loop src="lov%20me%20stupid%20(mp3cut.net).mp3"></audio>
+    </div>
+
     <script>
         // --- CONVERSION CONSTANTS ---
         const GAME_FACTORS = {
@@ -894,63 +908,55 @@
             requestAnimationFrame(animateBg);
         }
 
+        // --- MUSIC PLAYER ENGINE ---
+        const audio = document.getElementById('audio-element');
+        const playBtn = document.getElementById('play-btn');
+        const muteBtn = document.getElementById('mute-btn');
+        const statusText = document.getElementById('player-status');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            audio.play().then(() => {
+                statusText.innerText = audio.muted ? 'playing (muted)' : 'playing';
+            }).catch(() => {
+                playBtn.innerText = '▶';
+                statusText.innerText = 'click to play';
+            });
+        });
+
+        // Unmute automatically on first click anywhere on page
+        document.addEventListener('click', function startAudioOnInteraction() {
+            if (audio.muted) {
+                audio.muted = false;
+                muteBtn.innerText = '🔊';
+                statusText.innerText = 'playing';
+            }
+        }, { once: true });
+
+        function togglePlay() {
+            if (audio.paused) {
+                audio.play();
+                playBtn.innerText = '❚❚';
+                statusText.innerText = audio.muted ? 'playing (muted)' : 'playing';
+            } else {
+                audio.pause();
+                playBtn.innerText = '▶';
+                statusText.innerText = 'paused';
+            }
+        }
+
+        function toggleMute() {
+            audio.muted = !audio.muted;
+            muteBtn.innerText = audio.muted ? '🔇' : '🔊';
+            if (!audio.paused) {
+                statusText.innerText = audio.muted ? 'playing (muted)' : 'playing';
+            }
+        }
+
         // --- INIT ---
         convertSens();
         renderPlaylists();
         renderRoutine();
         animateBg();
     </script>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>My Page</title>
-</head>
-<body>
-
-    <!-- Your existing website content goes here -->
-
-
-    <!-- Paste the Mini Music Player Widget here -->
-    <div id="mini-player" style="position: fixed; bottom: 20px; right: 20px; background: #18181b; color: #ffffff; padding: 10px 14px; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-family: sans-serif; z-index: 9999; border: 1px solid #27272a;">
-      <button id="play-btn" onclick="togglePlay()" style="background: #e4e4e7; border: none; color: #09090b; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;">▶</button>
-      
-      <div style="display: flex; flex-direction: column;">
-        <span style="font-size: 12px; font-weight: 600; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">lov me stupid</span>
-        <span id="player-status" style="font-size: 10px; color: #a1a1aa;">Paused</span>
-      </div>
-
-      <button id="mute-btn" onclick="toggleMute()" style="background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 16px; padding: 4px;">🔊</button>
-
-      <audio id="audio-element" loop src="lov me stupid (mp3cut.net).mp3"></audio>
-    </div>
-
-    <script>
-      const audio = document.getElementById('audio-element');
-      const playBtn = document.getElementById('play-btn');
-      const muteBtn = document.getElementById('mute-btn');
-      const statusText = document.getElementById('player-status');
-
-      function togglePlay() {
-        if (audio.paused) {
-          audio.play();
-          playBtn.innerText = '❚❚';
-          statusText.innerText = 'Playing';
-        } else {
-          audio.pause();
-          playBtn.innerText = '▶';
-          statusText.innerText = 'Paused';
-        }
-      }
-
-      function toggleMute() {
-        audio.muted = !audio.muted;
-        muteBtn.innerText = audio.muted ? '🔇' : '🔊';
-      }
-    </script>
-
-</body>
-</html>
-</script>
 </body>
 </html>
