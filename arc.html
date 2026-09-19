@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>arc // aim & benchmark hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-black: #050505;
+            --card-bg: rgba(15, 15, 15, 0.75);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --glow-white: rgba(255, 255, 255, 0.85);
+            --glow-soft: rgba(255, 255, 255, 0.25);
+            --text-main: #f0f0f0;
+            --text-dim: #888888;
+            --accent-glow: 0 0 15px rgba(255, 255, 255, 0.4);
+            --font-head: 'Space Grotesk', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            text-transform: lowercase;
+            font-family: var(--font-head);
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* animated background canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* layout container */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* header section */
+        header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .brand-title {
+            font-size: 3.8rem;
+            font-weight: 700;
+            letter-spacing: -2px;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-title svg {
+            width: 42px;
+            height: 42px;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+        }
+
+        .sub-tag {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            margin-top: 6px;
+            letter-spacing: 1px;
+            font-family: var(--font-code);
+        }
+
+        .credit-tag {
+            color: #ffffff;
+            font-size: 0.85rem;
+            margin-top: 4px;
+            letter-spacing: 1.5px;
+            font-family: var(--font-code);
+            opacity: 0.8;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+        }
+
+        /* navigation tabs */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 35px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid var(--card-border);
+            color: var(--text-dim);
+            padding: 10px 22px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(10px);
+            font-family: var(--font-code);
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+        }
+
+        .tab-btn.active {
+            color: #000000;
+            background: #ffffff;
+            border-color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        /* content views */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* glowing cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            position: relative;
+            margin-bottom: 25px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.08);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 10px;
+        }
+
+        /* converter UI */
+        .converter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            font-family: var(--font-code);
+        }
+
+        select, input {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--card-border);
+            color: #ffffff;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+            font-family: var(--font-code);
+        }
+
+        select:focus, input:focus {
+            border-color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .res-box {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            padding: 18px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .res-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffffff;
+            font-family: var(--font-code);
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+        }
+
+        /* filter controls */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-btn {
+            background: rgba(15, 15, 15, 0.8);
+            border: 1px solid var(--card-border);
+            color: var(--text-dim);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: var(--font-code);
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            color: #ffffff;
+            border-color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        /* playlist list */
+        .playlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .playlist-card {
+            background: rgba(12, 12, 12, 0.8);
+            border: 1px solid var(--card-border);
+            padding: 16px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+        }
+
+        .playlist-card:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.08);
+        }
+
+        .pl-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .pl-tag {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-family: var(--font-code);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .pl-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .pl-desc {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+
+        .code-box {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 8px 12px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: #e0e0e0;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            transition: color 0.2s ease;
+            font-family: var(--font-code);
+        }
+
+        .copy-btn:hover {
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+        }
+
+        /* daily checklist */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(10, 10, 10, 0.6);
+            border: 1px solid var(--card-border);
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .task-item:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .task-item.done {
+            opacity: 0.4;
+            text-decoration: line-through;
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--card-border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .task-item.done .checkbox {
+            background: #ffffff;
+            border-color: #ffffff;
+        }
+
+        .task-item.done .checkbox::after {
+            content: '✓';
+            color: #000000;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        /* crosshair canvas simulator */
+        .reticle-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #reticleCanvas {
+            background: #000000;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+        }
+
+        .slider-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        input[type=range] {
+            accent-color: #ffffff;
+        }
+
+        /* toast notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #ffffff;
+            color: #000000;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+            font-family: var(--font-code);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* footer */
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-bottom: 20px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-family: var(--font-code);
+        }
+
+        /* responsive */
+        @media (max-width: 600px) {
+            .brand-title { font-size: 2.8rem; }
+            .container { padding: 20px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="container">
+        <header>
+            <div class="brand-title">
+                <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6">
+                    <path d="M 20 80 A 40 40 0 0 1 80 80" stroke-linecap="round"/>
+                    <circle cx="50" cy="50" r="8" fill="currentColor"/>
+                    <line x1="50" y1="10" x2="50" y2="25" stroke-linecap="round"/>
+                </svg>
+                arc
+            </div>
+            <div class="sub-tag">minimalist aim and benchmark utility</div>
+            <div class="credit-tag">designed by avyxl</div>
+        </header>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('converter')">sens converter</button>
+            <button class="tab-btn" onclick="switchTab('playlists')">playlist vault</button>
+            <button class="tab-btn" onclick="switchTab('routine')">daily warmup</button>
+            <button class="tab-btn" onclick="switchTab('reticle')">reticle studio</button>
+        </div>
+
+        <!-- SENSITIVITY CONVERTER -->
+        <div id="converter" class="tab-content active">
+            <div class="card">
+                <div class="card-title">
+                    <span>sensitivity & cm/360 engine</span>
+                    <span style="font-size:0.75rem; color:var(--text-dim);">precise multiplier math</span>
+                </div>
+                <div class="converter-grid">
+                    <div class="input-group">
+                        <label>source game</label>
+                        <select id="fromGame" onchange="convertSens()">
+                            <option value="valorant" selected>valorant</option>
+                            <option value="cs2">cs2 / cs:go</option>
+                            <option value="overwatch">overwatch 2</option>
+                            <option value="apex">apex legends</option>
+                            <option value="r6">rainbow six siege</option>
+                            <option value="fortnite">fortnite (x/y %)</option>
+                            <option value="kovaaks">kovaak's / aim lab</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>source sensitivity</label>
+                        <input type="number" id="fromSens" value="0.35" step="0.01" oninput="convertSens()">
+                    </div>
+
+                    <div class="input-group">
+                        <label>mouse dpi</label>
+                        <input type="number" id="mouseDpi" value="800" step="50" oninput="convertSens()">
+                    </div>
+
+                    <div class="input-group">
+                        <label>target game</label>
+                        <select id="toGame" onchange="convertSens()">
+                            <option value="valorant">valorant</option>
+                            <option value="cs2" selected>cs2 / cs:go</option>
+                            <option value="overwatch">overwatch 2</option>
+                            <option value="apex">apex legends</option>
+                            <option value="r6">rainbow six siege</option>
+                            <option value="fortnite">fortnite (x/y %)</option>
+                            <option value="kovaaks">kovaak's / aim lab</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="converter-grid" style="margin-top:20px;">
+                    <div class="res-box">
+                        <label>converted sensitivity</label>
+                        <div class="res-value" id="targetSens">1.113</div>
+                    </div>
+                    <div class="res-box">
+                        <label>cm / 360 distance</label>
+                        <div class="res-value" id="cm360Val">46.6 cm</div>
+                    </div>
+                    <div class="res-box">
+                        <label>inches / 360</label>
+                        <div class="res-value" id="in360Val">18.3 in</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PLAYLIST VAULT -->
+        <div id="playlists" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>benchmark playlist directory</span>
+                    <span style="font-size:0.75rem; color:var(--text-dim);" id="playlistCount">0 playlists loaded</span>
+                </div>
+
+                <div class="filter-bar">
+                    <input type="text" id="playlistSearch" class="search-input" placeholder="search playlist name or code..." oninput="filterPlaylists()">
+                    <button class="filter-btn active" onclick="setFilter('all', this)">all</button>
+                    <button class="filter-btn" onclick="setFilter('viscose', this)">viscose</button>
+                    <button class="filter-btn" onclick="setFilter('voltaic', this)">voltaic</button>
+                    <button class="filter-btn" onclick="setFilter('aimerz', this)">aimerz+</button>
+                </div>
+
+                <div class="playlist-grid" id="playlistGrid">
+                    <!-- Dynamic rendering -->
+                </div>
+            </div>
+        </div>
+
+        <!-- DAILY WARMUP -->
+        <div id="routine" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>daily aim routine checklist</span>
+                    <button class="filter-btn" onclick="resetRoutine()">reset all</button>
+                </div>
+                <div class="task-list" id="taskList">
+                    <!-- Dynamic rendering -->
+                </div>
+            </div>
+        </div>
+
+        <!-- RETICLE STUDIO -->
+        <div id="reticle" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>minimal reticle & arc previewer</span>
+                </div>
+                <div class="reticle-container">
+                    <canvas id="reticleCanvas" width="300" height="300"></canvas>
+                    <div class="slider-grid">
+                        <div class="input-group">
+                            <label>inner dot size</label>
+                            <input type="range" id="dotSize" min="1" max="10" value="3" oninput="drawReticle()">
+                        </div>
+                        <div class="input-group">
+                            <label>arc radius</label>
+                            <input type="range" id="arcRadius" min="8" max="40" value="18" oninput="drawReticle()">
+                        </div>
+                        <div class="input-group">
+                            <label>arc length</label>
+                            <input type="range" id="arcLength" min="10" max="120" value="45" oninput="drawReticle()">
+                        </div>
+                        <div class="input-group">
+                            <label>glow intensity</label>
+                            <input type="range" id="glowPower" min="0" max="25" value="12" oninput="drawReticle()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            arc // high precision minimalist gaming utility
+        </footer>
+    </div>
+
+    <div class="toast" id="toast">copied code to clipboard</div>
+
+    <script>
+        // --- CONVERSION CONSTANTS ---
+        const GAME_FACTORS = {
+            valorant: 0.07,
+            cs2: 0.022,
+            apex: 0.022,
+            overwatch: 0.0066,
+            r6: 0.00383,
+            fortnite: 0.005555,
+            kovaaks: 0.022
+        };
+
+        // --- PLAYLIST DATA ---
+        const PLAYLISTS = [
+            // VISCOSE BENCHMARKS
+            { name: "viscose novice - control tracking", cat: "viscose", code: "KovaaKsDunkingSlowMilestone", desc: "kovaak's novice control tracking benchmark" },
+            { name: "viscose novice - reactive tracking", cat: "viscose", code: "KovaaKsEntryfraggingSmoothBuff", desc: "kovaak's novice reactive tracking benchmark" },
+            { name: "viscose novice - flick tech", cat: "viscose", code: "KovaaKsExitfraggingSmoothSpeed", desc: "kovaak's novice flick tech benchmark" },
+            { name: "viscose novice - dynamic clicking", cat: "viscose", code: "KovaaKsFinishingSpringgreenDoor", desc: "kovaak's novice dynamic clicking benchmark" },
+
+            { name: "viscose medium - control tracking", cat: "viscose", code: "KovaaKsDashingShinyXur", desc: "kovaak's medium control tracking benchmark" },
+            { name: "viscose medium - reactive tracking", cat: "viscose", code: "KovaaKsDroppingSlipperyTimewarp", desc: "kovaak's medium reactive tracking benchmark" },
+            { name: "viscose medium - flick tech", cat: "viscose", code: "KovaaKsDinkingSkyblueFaq", desc: "kovaak's medium flick tech benchmark" },
+            { name: "viscose medium - click timing", cat: "viscose", code: "KovaaKsCrankingSepiaPopcorn", desc: "kovaak's medium click timing benchmark" },
+
+            { name: "viscose advanced - control tracking", cat: "viscose", code: "KovaaKsJigglepeekingTwitchyFinisher", desc: "kovaak's advanced control tracking benchmark" },
+            { name: "viscose advanced - reactive tracking", cat: "viscose", code: "KovaaKsHeadshottingThinCinematic", desc: "kovaak's advanced reactive tracking benchmark" },
+            { name: "viscose advanced - flick tech", cat: "viscose", code: "KovaaKsHipfiringTurquoise1x1", desc: "kovaak's advanced flick tech benchmark" },
+            { name: "viscose advanced - dynamic clicking", cat: "viscose", code: "KovaaKsImpactingTurquoisePatrol", desc: "kovaak's advanced dynamic clicking benchmark" },
+
+            // VOLTAIC BENCHMARKS
+            { name: "voltaic s4 novice", cat: "voltaic", code: "KovaaKsTeleportingJebaitedBuystation", desc: "official voltaic season 4 novice playlist" },
+            { name: "voltaic s4 intermediate", cat: "voltaic", code: "KovaaKsBobbingSneakyBloom", desc: "official voltaic season 4 intermediate playlist" },
+            { name: "voltaic s4 advanced", cat: "voltaic", code: "KovaaKsUltingClutchHipfire", desc: "official voltaic season 4 advanced playlist" },
+            { name: "voltaic s3 intermediate", cat: "voltaic", code: "KovaaKsFlickingFastCashdrop", desc: "official voltaic season 3 intermediate playlist" },
+            { name: "voltaic s3 advanced", cat: "voltaic", code: "KovaaKsFlashingFarFinisher", desc: "official voltaic season 3 advanced playlist" },
+
+            // AIMERZ+ BENCHMARKS
+            { name: "aimerz+ easy", cat: "aimerz", code: "KovaaKsBobbingPeachPrism", desc: "aimerz+ easy tier benchmark playlist" },
+            { name: "aimerz+ normal", cat: "aimerz", code: "KovaaKsBlinkingOrangeCrossfire", desc: "aimerz+ normal tier benchmark playlist" },
+            { name: "aimerz+ hard", cat: "aimerz", code: "KovaaKsBloomingPeachArena", desc: "aimerz+ hard tier benchmark playlist" }
+        ];
+
+        // --- ROUTINE DATA ---
+        let tasks = [
+            { id: 1, name: "smoothness / precise tracking (10 mins)", done: false },
+            { id: 2, name: "target switching & speed control (10 mins)", done: false },
+            { id: 3, name: "micro-flicks & dynamic clicking (10 mins)", done: false },
+            { id: 4, name: "valorant range / deathmatch warmup (15 mins)", done: false },
+            { id: 5, name: "post-session benchmark log", done: false }
+        ];
+
+        let activeFilter = 'all';
+
+        // --- TAB SWITCHING ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            if (tabId === 'reticle') drawReticle();
+        }
+
+        // --- SENS CONVERTER LOGIC ---
+        function convertSens() {
+            const fromGame = document.getElementById('fromGame').value;
+            const toGame = document.getElementById('toGame').value;
+            const fromSens = parseFloat(document.getElementById('fromSens').value) || 0;
+            const dpi = parseFloat(document.getElementById('mouseDpi').value) || 800;
+
+            const fromFactor = GAME_FACTORS[fromGame];
+            const toFactor = GAME_FACTORS[toGame];
+
+            // Calculate yaw / degree conversion
+            const yaw = fromSens * fromFactor;
+            const targetSensVal = yaw / toFactor;
+
+            // cm/360 calculation = 360 / (yaw * dpi) * 2.54
+            const cm360 = (360 / (yaw * dpi)) * 2.54;
+            const in360 = cm360 / 2.54;
+
+            document.getElementById('targetSens').innerText = isNaN(targetSensVal) ? '0.00' : targetSensVal.toFixed(3);
+            document.getElementById('cm360Val').innerText = isNaN(cm360) || !isFinite(cm360) ? '0.0 cm' : cm360.toFixed(1) + ' cm';
+            document.getElementById('in360Val').innerText = isNaN(in360) || !isFinite(in360) ? '0.0 in' : in360.toFixed(1) + ' in';
+        }
+
+        // --- PLAYLIST RENDER & FILTER ---
+        function renderPlaylists() {
+            const grid = document.getElementById('playlistGrid');
+            const search = document.getElementById('playlistSearch').value.toLowerCase();
+            
+            grid.innerHTML = '';
+
+            const filtered = PLAYLISTS.filter(p => {
+                const matchesFilter = activeFilter === 'all' || p.cat === activeFilter;
+                const matchesSearch = p.name.toLowerCase().includes(search) || p.code.toLowerCase().includes(search) || p.desc.toLowerCase().includes(search);
+                return matchesFilter && matchesSearch;
+            });
+
+            document.getElementById('playlistCount').innerText = `${filtered.length} playlists shown`;
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'playlist-card';
+                card.innerHTML = `
+                    <div>
+                        <div class="pl-header">
+                            <span class="pl-title">${p.name}</span>
+                            <span class="pl-tag">${p.cat}</span>
+                        </div>
+                        <div class="pl-desc">${p.desc}</div>
+                    </div>
+                    <div class="code-box">
+                        <span>${p.code}</span>
+                        <button class="copy-btn" onclick="copyCode('${p.code}')">copy</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function setFilter(cat, btn) {
+            document.querySelectorAll('.filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeFilter = cat;
+            renderPlaylists();
+        }
+
+        function filterPlaylists() {
+            renderPlaylists();
+        }
+
+        function copyCode(code) {
+            navigator.clipboard.writeText(code);
+            showToast(`copied: ${code}`);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // --- ROUTINE CHECKLIST ---
+        function renderRoutine() {
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+
+            tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = `task-item ${task.done ? 'done' : ''}`;
+                item.onclick = () => toggleTask(task.id);
+                item.innerHTML = `
+                    <span>${task.name}</span>
+                    <div class="checkbox"></div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
+            renderRoutine();
+        }
+
+        function resetRoutine() {
+            tasks = tasks.map(t => ({ ...t, done: false }));
+            renderRoutine();
+            showToast("routine reset");
+        }
+
+        // --- RETICLE STUDIO ---
+        function drawReticle() {
+            const canvas = document.getElementById('reticleCanvas');
+            const ctx = canvas.getContext('2d');
+            const dotSize = parseFloat(document.getElementById('dotSize').value);
+            const radius = parseFloat(document.getElementById('arcRadius').value);
+            const arcLength = parseFloat(document.getElementById('arcLength').value) * (Math.PI / 180);
+            const glow = parseFloat(document.getElementById('glowPower').value);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            // Set Glow
+            ctx.shadowBlur = glow;
+            ctx.shadowColor = '#ffffff';
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+
+            // Center Dot
+            ctx.beginPath();
+            ctx.arc(cx, cy, dotSize, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Render Outer Glowing Arcs (4 Quadrants)
+            for (let i = 0; i < 4; i++) {
+                const angleOffset = (i * Math.PI / 2);
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, angleOffset - arcLength / 2, angleOffset + arcLength / 2);
+                ctx.stroke();
+            }
+        }
+
+        // --- DYNAMIC BACKGROUND CANVAS ---
+        const bgCanvas = document.getElementById('bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class ArcParticle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * bgCanvas.width;
+                this.y = Math.random() * bgCanvas.height;
+                this.radius = Math.random() * 40 + 10;
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = Math.random() * 0.01 + 0.002;
+                this.opacity = Math.random() * 0.3 + 0.05;
+                this.arcSpan = Math.random() * Math.PI + 0.5;
+            }
+
+            update() {
+                this.angle += this.speed;
+                if (this.angle > Math.PI * 2) this.angle = 0;
+            }
+
+            draw() {
+                bgCtx.save();
+                bgCtx.beginPath();
+                bgCtx.arc(this.x, this.y, this.radius, this.angle, this.angle + this.arcSpan);
+                bgCtx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                bgCtx.lineWidth = 1;
+                bgCtx.shadowBlur = 8;
+                bgCtx.shadowColor = '#ffffff';
+                bgCtx.stroke();
+                bgCtx.restore();
+            }
+        }
+
+        for (let i = 0; i < 35; i++) {
+            particles.push(new ArcParticle());
+        }
+
+        function animateBg() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateBg);
+        }
+
+        // --- INIT ---
+        convertSens();
+        renderPlaylists();
+        renderRoutine();
+        animateBg();
+    </script>
+</body>
+</html>
