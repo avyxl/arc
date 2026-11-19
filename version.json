@@ -1,0 +1,36 @@
+{
+  "manifestType": "solcord-local-build",
+  "name": "Solcord",
+  "version": "2.1.0",
+  "repository": "https://github.com/avyxl/SolCord",
+  "distribution": "local",
+  "published": false,
+  "automaticUpdates": false,
+  "installer": {
+    "name": "SolcordInstaller.exe",
+    "sizeBytes": 6748160,
+    "sha256": "249c79d1bc160e2521741ce3a01b8dd8cb5bad153f7fec5eb810d15569fa5199"
+  },
+  "embeddedPayloads": [
+    {
+      "name": "patcher.js",
+      "sizeBytes": 89848,
+      "sha256": "dbe91593df6aea167ef59bfca417bf93e0e48cdb1b6e5c76424e22372922fd2b"
+    },
+    {
+      "name": "preload.js",
+      "sizeBytes": 11142,
+      "sha256": "c53750f043ddbb4de5b2d708e11c522e1ae3a1bbc8c92cdb937bd278083b4093"
+    },
+    {
+      "name": "renderer.js",
+      "sizeBytes": 6061112,
+      "sha256": "24ff3cdbf9a6af2f4c7cb3e662e2b32539d5e4f8a41b6ca210981943a5dd4098"
+    },
+    {
+      "name": "renderer.css",
+      "sizeBytes": 58870,
+      "sha256": "7b965f8b8cf78d54eb34e3523fb4d159e94552b373807df61251377dcf95682e"
+    }
+  ]
+}
