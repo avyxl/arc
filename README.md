@@ -28,7 +28,7 @@ The count includes participating open installations, including idle ones. It is 
 ## Website
 
 Website/index.html in the release ZIP is configured for the live Worker:
-https://solcord-presence.adammohamedali01.workers.dev
+********************************************
 
 The website only reads aggregate stats; visiting it does not count as an installation. Use the separate website package to publish the HTML and its downloads folder together.
 
@@ -54,6 +54,6 @@ Only the fixed presence endpoint is added to connect-src. Requests omit credenti
 
 This is a public approximate counter; modified clients can imitate heartbeats. There is no embedded server secret or claim of tamper-proof installation verification.
 
-GPL-3.0-or-later. See LICENSE and THIRD_PARTY_NOTICES.md. Original copyright notices remain. Solcord is not affiliated with Discord Inc. or the Solana Foundation. Supplied media and logos are included as provided.
+. See LICENSE and THIRD_PARTY_NOTICES.md. Original copyright notices remain. Solcord is not affiliated with Discord Inc. or the Solana Foundation. Supplied media and logos are included as provided.
 
 Release metadata describes the actual locally built installer and payload hashes, without claiming an online update signature. Automatic background updates remain disabled in this package.
